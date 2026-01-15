@@ -1,0 +1,457 @@
+
+travel.html
+第
+1
+頁
+(
+共
+1
+頁)
+100%
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 旅遊行程規劃助手 v14.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #d35400;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 30px;
+        }
+
+        h1 { text-align: center; color: var(--primary-color); margin-bottom: 25px; font-size: 1.8rem; }
+
+        .settings-box { background: #fff8e1; padding: 20px; border-radius: 12px; border: 1px solid #ffe0b2; margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; }
+        
+        /* 修改 Label 樣式以容納連結 */
+        .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        label { font-weight: 600; color: var(--primary-color); font-size: 1rem; margin: 0; }
+        
+        /* 教學連結樣式 */
+        .help-link {
+            font-size: 0.9rem; color: #1976d2; text-decoration: none; cursor: pointer;
+            display: flex; align-items: center; gap: 5px; transition: color 0.2s;
+        }
+        .help-link:hover { color: #0d47a1; text-decoration: underline; }
+
+        input, select, textarea {
+            width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;
+            box-sizing: border-box; background-color: #fff; font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent-color); outline: none; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .people-group { display: flex; gap: 10px; }
+        .people-input-wrapper { position: relative; flex: 1; }
+        .people-input-wrapper span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #888; font-size: 13px; }
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .transport-options, .style-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .transport-radio, .style-radio { display: none; }
+        
+        .transport-label, .style-label {
+            display: flex; flex-direction: row; align-items: center; justify-content: center;
+            padding: 12px 5px; border: 2px solid #e0e0e0; border-radius: 8px;
+            cursor: pointer; text-align: center; font-size: 14px; gap: 8px;
+        }
+        .transport-radio:checked + .transport-label, .style-radio:checked + .style-label {
+            border-color: var(--accent-color); background-color: #fef5e7; color: var(--accent-color); font-weight: bold;
+        }
+
+        .tags-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag-checkbox { display: none; }
+        .tag-label { padding: 6px 14px; background-color: #f0f0f0; border-radius: 20px; cursor: pointer; font-size: 13px; }
+        .tag-checkbox:checked + .tag-label { background-color: var(--primary-color); color: white; }
+
+        button.submit-btn {
+            width: 100%; padding: 15px; background-color: var(--accent-color); color: white;
+            border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px;
+        }
+        button.submit-btn:hover { background-color: #a04000; }
+        button.submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        #result-section { display: none; margin-top: 30px; }
+        #pdf-content-area {
+            padding: 40px; background-color: #ffffff; color: #000; border: 1px solid #eee; border-radius: 12px;
+            font-size: 15px; line-height: 1.8;
+        }
+        #pdf-content-area h1 { font-size: 24px; color: #d35400; border-bottom: 2px solid #eee; padding-bottom: 15px; text-align: center;}
+        #pdf-content-area h3 { color: #e67e22; margin-top: 25px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        #pdf-content-area strong { color: #d35400; font-weight: 800; }
+        
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .action-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; gap:5px;}
+        .btn-pdf { background-color: #e74c3c; color: white; }
+        .btn-print { background-color: #34495e; color: white; }
+        .btn-reload { background-color: #95a5a6; color: white; }
+
+        .tip-card { background: #e3f2fd; border-left: 5px solid #2196f3; padding: 15px; border-radius: 4px; margin-top: 20px; }
+        .copy-box { background: #fff; border: 1px solid #bbdefb; padding: 10px; cursor: pointer; margin-top:10px; position: relative;}
+        
+        .spinner { width: 24px; height: 24px; border: 3px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media print {
+            body * { visibility: hidden; }
+            #pdf-content-area, #pdf-content-area * { visibility: visible; }
+            #pdf-content-area { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; margin: 0; }
+            .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>✈️ AI 旅遊行程規劃 v14.0</h1>
+
+    <div class="settings-box">
+        <div class="form-group">
+            <div class="label-row">
+                <label for="apiKey" style="color: #d35400;">🔑 Gemini API Key</label>
+                <a class="help-link" onclick="openTutorialPage()">
+                    <i class="fas fa-question-circle"></i> 如何獲取 Key?
+                </a>
+            </div>
+            <input type="password" id="apiKey" placeholder="請貼上您的 API Key">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+            <label for="aiModel" style="color: #d35400;">🧠 AI 模型選擇</label>
+            <select id="aiModel">
+                <option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash</option>
+                <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro</option>
+                <option value="gemma-3-27b-it">💎 Gemma 3 27B</option>
+                <option value="custom">✏️ 手動輸入模型名稱</option>
+            </select>
+            <input type="text" id="customModelInput" placeholder="例如: gemini-1.5-pro" style="display:none; margin-top:10px;">
+        </div>
+    </div>
+
+    <div class="form-group grid-2">
+        <div><label>📍 目的地</label><input type="text" id="destination" placeholder="例如：京都"></div>
+        <div><label>📅 出發日期</label><input type="date" id="startDate"></div>
+    </div>
+
+    <div class="form-group grid-2">
+        <div><label>⏱️ 天數 <span id="nights-text" style="color:#888;">(1夜)</span></label><input type="number" id="days" value="3" min="1"></div>
+        <div><label>👥 人數</label>
+            <div class="people-group">
+                <div class="people-input-wrapper"><input type="number" id="adults" value="2" min="1"><span>大人</span></div>
+                <div class="people-input-wrapper"><input type="number" id="children" value="0" min="0"><span>小孩</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>🚗 交通方式</label>
+        <div class="transport-options">
+            <input type="radio" name="transport" id="taxi" value="計程車(Taxi)" class="transport-radio">
+            <label for="taxi" class="transport-label"><i class="fas fa-taxi"></i> 計程車</label>
+            <input type="radio" name="transport" id="drive" value="自行開車/租車" class="transport-radio" checked>
+            <label for="drive" class="transport-label"><i class="fas fa-car"></i> 自駕</label>
+            <input type="radio" name="transport" id="public" value="大眾運輸" class="transport-radio">
+            <label for="public" class="transport-label"><i class="fas fa-train"></i> 大眾運輸</label>
+            <input type="radio" name="transport" id="charter" value="包車(Charter)" class="transport-radio">
+            <label for="charter" class="transport-label"><i class="fas fa-bus"></i> 包車</label>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>🎨 旅行偏好</label>
+        <div class="tags-container">
+            <input type="checkbox" id="food" value="在地美食" class="tag-checkbox" checked><label for="food" class="tag-label">🍜 美食</label>
+            <input type="checkbox" id="nature" value="大自然" class="tag-checkbox"><label for="nature" class="tag-label">🌲 自然</label>
+            <input type="checkbox" id="culture" value="歷史文化" class="tag-checkbox"><label for="culture" class="tag-label">🏯 歷史</label>
+            <input type="checkbox" id="shopping" value="購物" class="tag-checkbox"><label for="shopping" class="tag-label">🛍️ 購物</label>
+            <input type="checkbox" id="relax" value="放鬆行程" class="tag-checkbox"><label for="relax" class="tag-label">☕ 放鬆</label>
+        </div>
+    </div>
+
+    <div class="form-group" style="background: #fff3e0; padding: 15px; border-radius: 12px; border: 2px dashed #ffcc80;">
+        <label style="color: #e65100;">✨ 自訂必去景點</label>
+        <textarea id="customSpots" placeholder="例如：第二天晚上一定要去吃「阿財牛肉湯」"></textarea>
+    </div>
+
+    <div class="form-group" style="margin-top: 25px;">
+        <label>🖼️ 選擇生成圖的風格 (用於咒語)</label>
+        <div class="style-options">
+            <input type="radio" name="imgStyle" id="style1" value="watercolor" class="style-radio" checked>
+            <label for="style1" class="style-label"><i class="fas fa-paint-brush"></i> 手繪水彩風</label>
+            <input type="radio" name="imgStyle" id="style2" value="cartoon" class="style-radio">
+            <label for="style2" class="style-label"><i class="fas fa-smile"></i> 卡通貼紙風</label>
+            <input type="radio" name="imgStyle" id="style3" value="ghibli" class="style-radio">
+            <label for="style3" class="style-label"><i class="fas fa-leaf"></i> 吉卜力動畫風</label>
+            <input type="radio" name="imgStyle" id="style4" value="pixel" class="style-radio">
+            <label for="style4" class="style-label"><i class="fas fa-gamepad"></i> 像素遊戲風</label>
+        </div>
+    </div>
+
+    <button id="generateBtn" class="submit-btn">
+        <div class="spinner" id="loadingSpinner"></div>
+        <span id="btnText">開始規劃行程 ✨</span>
+    </button>
+
+    <div id="result-section">
+        <div id="pdf-content-area">
+            <div id="markdown-output"></div>
+            <div style="margin-top: 40px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
+                — 本行程由 AI 旅遊規劃助手生成 —
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn btn-pdf" id="downloadPdfBtn">
+                <i class="fas fa-file-pdf"></i> 下載 PDF (快速)
+            </button>
+            <button class="action-btn btn-print" onclick="window.print()">
+                <i class="fas fa-print"></i> 系統列印 (最穩)
+            </button>
+            <button class="action-btn btn-reload" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                <i class="fas fa-arrow-up"></i> 修改
+            </button>
+        </div>
+
+        <div class="tip-card">
+            <div style="font-weight:bold; color:#1565c0; margin-bottom:5px;"><i class="fas fa-magic"></i> AI 生圖咒語</div>
+            <p style="font-size:13px; margin:0; color:#555;">複製下方咒語，貼給 AI 生成<span id="styleNameDisplay" style="color:#d35400; font-weight:bold;"></span>地圖！</p>
+            <div class="copy-box" id="imagePromptBox" onclick="copyPrompt()">點擊生成咒語...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('days').addEventListener('input', function() {
+        const d = parseInt(this.value) || 1;
+        document.getElementById('nights-text').innerText = `(${d > 1 ? d - 1 : 0}夜)`;
+    });
+    document.getElementById('aiModel').addEventListener('change', function() {
+        document.getElementById('customModelInput').style.display = (this.value === 'custom') ? 'block' : 'none';
+    });
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('startDate').valueAsDate = tomorrow;
+
+    // --- 新增：開啟教學頁面函數 ---
+    function openTutorialPage() {
+        const win = window.open('', '_blank');
+        const content = `
+        <!DOCTYPE html>
+        <html lang="zh-TW">
+        <head>
+            <meta charset="UTF-8">
+            <title>如何免費獲取 Gemini API Key</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            <style>
+                body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: #f4f7f6; color: #333; line-height: 1.6; }
+                .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+                h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+                h2 { color: #d35400; font-size: 1.3rem; margin-top: 0; display: flex; align-items: center; gap: 10px; }
+                .btn { display: inline-block; background: #1a73e8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+                .btn:hover { background: #1557b0; transform: translateY(-2px); }
+                .icon-box { font-size: 3rem; color: #eee; text-align: center; margin: 15px 0; }
+                .highlight { background: #fff3cd; padding: 2px 5px; border-radius: 4px; font-weight: bold; color: #856404; }
+                .step-num { background: #d35400; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>🔑 3 分鐘免費獲取 Gemini API Key</h1>
+                <p style="text-align: center; color: #666;">只要有 Google 帳號，即可免費申請，每日有高達 15 億 tokens 的免費額度！</p>
+                
+                <div style="border-left: 4px solid #4caf50; background: #e8f5e9; padding: 15px; margin: 20px 0;">
+                    <strong>💡 為什麼需要 API Key？</strong><br>
+                    這個網頁工具直接連線到 Google 的大腦 (Gemini)，API Key 就是連線的「通行證」。我們不會儲存您的 Key，請安心使用。
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="step-num">1</span> 前往 Google AI Studio</h2>
+                <p>點擊下方藍色按鈕，前往 Google 官方的開發者平台 (Google AI Studio)。</p>
+                <div style="text-align: center;">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="btn">
+                        前往 Google AI Studio <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="step-num">2</span> 登入並建立 Key</h2>
+                <p>進入網站後，請依照以下步驟操作：</p>
+                <ul>
+                    <li>如果未登入，請先登入您的 Google 帳號。</li>
+                    <li>點擊畫面左上角的 <span class="highlight">Get API key</span> 按鈕。</li>
+                    <li>點擊藍色的 <span class="highlight">Create API key</span> (建立 API 金鑰)。</li>
+                </ul>
+                <div class="icon-box">
+                    <i class="fas fa-mouse-pointer" style="color: #2c3e50;"></i>
+                    <i class="fas fa-arrow-right" style="font-size: 20px; color: #ccc;"></i>
+                    <i class="fas fa-key" style="color: #f1c40f;"></i>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="step-num">3</span> 複製並貼上</h2>
+                <p>系統會產生一串長長的亂碼 (以 AIza 開頭)。</p>
+                <ul>
+                    <li>點擊亂碼旁邊的 <span class="highlight">Copy</span> (複製) 按鈕。</li>
+                    <li>回到我們的「AI 旅遊行程規劃助手」頁面。</li>
+                    <li>將 Key 貼入 <span class="highlight">Gemini API Key</span> 欄位即可！</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+                教學頁面由 AI 旅遊助手自動生成
+            </div>
+        </body>
+        </html>
+        `;
+        win.document.write(content);
+        win.document.close();
+    }
+
+    // --- 主程式 ---
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        if (!apiKey) { alert("請輸入 API Key！"); return; }
+        const destination = document.getElementById('destination').value;
+        if (!destination) { alert("請輸入目的地！"); return; }
+
+        const btn = document.getElementById('generateBtn');
+        const spinner = document.getElementById('loadingSpinner');
+        const btnText = document.getElementById('btnText');
+        const resultSection = document.getElementById('result-section');
+        const mdOutput = document.getElementById('markdown-output');
+        const promptBox = document.getElementById('imagePromptBox');
+        const styleNameDisplay = document.getElementById('styleNameDisplay');
+
+        btn.disabled = true; spinner.style.display = 'block'; btnText.innerText = "規劃中...";
+        resultSection.style.display = 'none';
+
+        try {
+            let model = document.getElementById('aiModel').value;
+            if (model === 'custom') model = document.getElementById('customModelInput').value.trim();
+            
+            const startDate = document.getElementById('startDate').value;
+            const days = document.getElementById('days').value;
+            const adults = document.getElementById('adults').value;
+            const children = document.getElementById('children').value;
+            const transport = document.querySelector('input[name="transport"]:checked').value;
+            const customSpots = document.getElementById('customSpots').value.trim();
+            const checkboxes = document.querySelectorAll('.tag-checkbox:checked');
+            const interests = Array.from(checkboxes).map(cb => cb.value).join('、');
+            
+            const imgStyleValue = document.querySelector('input[name="imgStyle"]:checked').value;
+            let styleText = "手繪水彩風";
+            let styleName = "手繪水彩風";
+            if(imgStyleValue === 'cartoon') { styleText = "美式卡通貼紙風"; styleName = "卡通貼紙風"; }
+            if(imgStyleValue === 'ghibli') { styleText = "吉卜力動畫背景風"; styleName = "吉卜力風"; }
+            if(imgStyleValue === 'pixel') { styleText = "復古像素遊戲風"; styleName = "像素風"; }
+            styleNameDisplay.innerText = styleName;
+
+            const promptText = `你是一個導遊。請規劃行程：
+            - 地點：${destination} (${startDate}出發, ${days}天)
+            - 人數：${adults}大${children}小
+            - 交通：${transport}
+            - 偏好：${interests}
+            ${customSpots ? `\n- 必去：${customSpots}` : ''}
+            
+            **要求**：
+            1. 給一個純文字標題。
+            2. 詳細每日行程。
+            3. 若為計程車請估算每段車資。
+            4. 附上預算表。
+            5. 用 Markdown。`;
+
+            const responseText = await callGeminiAPI(apiKey, model, promptText);
+
+            const lines = responseText.split('\n');
+            const title = lines[0].replace(/[#*]/g, '').trim();
+            const headerHtml = `<h1 style="text-align:center; margin-bottom:30px; border-bottom:none;">${title}</h1>`;
+            mdOutput.innerHTML = headerHtml + marked.parse(responseText);
+
+            const imgPrompt = `請根據這份 PDF 行程表，繪製一張「${styleText}」的旅遊地圖插畫，標示主要景點與路徑，畫面要豐富精美。`;
+            promptBox.innerText = imgPrompt;
+            promptBox.setAttribute('data-full-text', imgPrompt);
+
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+
+        } catch (error) {
+            alert("錯誤：" + error.message);
+        } finally {
+            btn.disabled = false; spinner.style.display = 'none'; btnText.innerText = "重新規劃 ✨";
+        }
+    });
+
+    async function callGeminiAPI(apiKey, model, prompt) {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        if (!response.ok) {
+            let msg = "API Error";
+            try { const d = await response.json(); msg = d.error?.message || msg; } catch(e){}
+            throw new Error(msg);
+        }
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+    }
+
+    document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+        window.scrollTo(0, 0);
+        const element = document.getElementById('pdf-content-area');
+        const dest = document.getElementById('destination').value || 'Travel';
+        const opt = {
+            margin: 10,
+            filename: `${dest}_行程表.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", scrollY: 0, scrollX: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    });
+
+    function copyPrompt() {
+        const box = document.getElementById('imagePromptBox');
+        const text = box.getAttribute('data-full-text');
+        if(!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = box.innerText;
+            box.innerText = "✅ 已複製！";
+            box.style.background = "#dcedc8";
+            setTimeout(() => { box.innerText = text; box.style.background = "#fff"; }, 2000);
+        });
+    }
+</script>
+
+</body>
+</html>
+目前顯示的是「travel.html」。
